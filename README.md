@@ -1,0 +1,2 @@
+# xaja
+Simple ajax library
