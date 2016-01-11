@@ -10,6 +10,10 @@
     const XMLHttpRequest = require('xmlhttprequest');
   }
 
+  const noURLError     = new Error("Invalid url");
+  const emptyJSONError = new Error("Empty JSON response");
+  const networkError   = new Error("Network Error");
+
   //toURLString :: a -> String
   const toURLString = a => {
     const type = typeof a
@@ -24,26 +28,58 @@
     }
   };
 
+  //stripUserAndPass :: {k:v} -> [String]
+  //stripUserAndPass :: Null -> []
+  const stripUserAndPass = obj => {
+    if (obj == null) {
+      return [];
+    }
+    const keys = Object.keys(obj);
+    let retObj = {}, user = "", pass = "";
+    keys.forEach(k => {
+      let val = obj[k];
+      if (k.match(/user/i)) {
+        user = val;
+      } else if (k.match(/pass/i)) {
+        pass = val;
+      } else {
+        retObj[k] = val;
+      }
+    });
+    return [toURLString(retObj), user, pass];
+  }
+
   //checkJSON JSON -> {k:v}
   //checkJSON String -> Error
   const checkJSON = (json) => {
     switch (true) {
       case typeof json !== 'string': return new Error(`Invalid type ${typeof json} in checkJSON`);
-      case json.length < 3: return new Error("Empty JSON response");
+      case json.length < 3: return emptyJSONError;
       default: return JSON.parse(json);
     }
   };
 
   return {
     get: (url, data, returnType) => {
+      if (typeof url !== 'string' || !url.length) {
+        return promise.reject(noURLError);
+      }
+      [params, user, pass] = stripUserAndPass(data);
       return new Promise((resolve, reject) => {
-        const params = data == null ? '' : '?' + toURLString(data);
         if (params instanceof Error) {
           reject(params);
           return null;
         }
+        const path = params == null ? url : url + '?' + params;
+        let arr = ['GET', path, true];
+        if (user != null) {
+          arr.push(user);
+          if (pass != null) {
+            arr.push(pass);
+          }
+        }
         const xhr = new XMLHttpRequest();
-        xhr.open('GET', url + params);
+        xhr.open.apply(xhr, arr);
         xhr.onload = () => {
           if (xhr.status < 400 && xhr.status >= 200) {
             if (typeof returnType === 'string' && returnType.toLowerCase() === 'json') {
@@ -64,7 +100,7 @@
           }
         };
         xhr.onerror = () => {
-          reject(new Error("Network Error"));
+          reject(networkError);
           return null;
         }
         xhr.send();
@@ -72,14 +108,25 @@
       });
     },
     post: (url, data, returnType) => {
+      if (typeof url !== 'string' || !url.length) {
+        return promise.reject(noURLError);
+      }
+      [params, user, pass] = stripUserAndPass(data);
       return new Promise((resolve, reject) => {
         const params = data == null ? '' : toURLString(data);
         if (params instanceof Error) {
           reject(params);
           return null;
         }
+        let arr = ['POST', url, true];
+        if (user != null) {
+          arr.push(user);
+          if (pass != null) {
+            arr.push(pass);
+          }
+        }
         const xhr = new XMLHttpRequest();
-        xhr.open('POST', url);
+        xhr.open.apply(xhr, arr);
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
         xhr.onload = () => {
           if (xhr.status < 400 && xhr.status >= 200) {
@@ -101,10 +148,10 @@
           }
         };
         xhr.onerror = () => {
-          reject(new Error("Network Error"));
+          reject(networkError);
           return null;
         }
-        xhr.send(params);
+        xhr.send(params || null);
         return null;
       });
     },
