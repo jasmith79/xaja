@@ -1,16 +1,18 @@
 ;((root, main) => {
-  const MOD_NAME = 'xaja'
+  const MOD_NAME = "xaja"
   switch (true) {
-    case typeof module === 'object' && module.exports != null: module.exports = main(root); break;
-    case typeof define === 'function' && define.amd: define(main(root)); break;
+    case typeof module === "object" && module.exports != null: module.exports = main(root); break;
+    case typeof define === "function" && define.amd: define(main(root)); break;
     default: root[MOD_NAME] = main(root); break;
   }
 })(window ? window : null, _global => {
-  if (typeof XMLHttpRequest !== 'function') {
-    const XMLHttpRequest = require('xmlhttprequest');
+  "use strict";
+  if (typeof XMLHttpRequest !== "function") {
+    const XMLHttpRequest = require("xmlhttprequest");
   }
 
-  const noURLError     = new Error("Invalid url");
+  const noURLError     = new TypeError("Invalid url");
+  const notStringError = new TypeError("Need string parameter");
   const emptyJSONError = new Error("Empty JSON response");
   const networkError   = new Error("Network Error");
 
@@ -18,14 +20,26 @@
   const toURLString = a => {
     const type = typeof a
     switch (type) {
-      case 'string': return a;
-      case 'object':
-        return a === null ? '' :
+      case "string": return a;
+      case "object":
+        return a === null ? "" :
           Object.keys(a)
             .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(a[k])}`)
-            .join('&');
+            .join("&");
       default: return new Error(`${type} is not a valid ajax parameter`);
     }
+  };
+
+  //from https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
+  //note that btoa is IE 10+
+  const base64Encode = str => {
+    if (typeof str !== "string") {
+      throw notStringError;
+    }
+    const bstring = encodeURIComponent(str)
+      .replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode("0x" + p1));
+
+    return btoa(bstring);
   };
 
   //stripUserAndPass :: {k:v} -> [String]
@@ -35,7 +49,7 @@
       return [];
     }
     const keys = Object.keys(obj);
-    let retObj = {}, user = "", pass = "";
+    let retObj = {}, user = "", pass = "", authStr = "";
     keys.forEach(k => {
       let val = obj[k];
       if (k.match(/user/i)) {
@@ -46,14 +60,17 @@
         retObj[k] = val;
       }
     });
-    return [toURLString(retObj), user, pass];
+    if (user) {
+      authStr = "Basic " + base64Encode(user + ":" + pass);
+    }
+    return [toURLString(retObj), authStr];
   }
 
   //checkJSON JSON -> {k:v}
   //checkJSON String -> Error
   const checkJSON = (json) => {
     switch (true) {
-      case typeof json !== 'string': return new Error(`Invalid type ${typeof json} in checkJSON`);
+      case typeof json !== "string": return new Error(`Invalid type ${typeof json} in checkJSON`);
       case json.length < 3: return emptyJSONError;
       default: return JSON.parse(json);
     }
@@ -61,28 +78,24 @@
 
   return {
     get: (url, data, returnType) => {
-      if (typeof url !== 'string' || !url.length) {
+      if (typeof url !== "string" || !url.length) {
         return promise.reject(noURLError);
       }
-      [params, user, pass] = stripUserAndPass(data);
+      let [params, authStr] = stripUserAndPass(data);
       return new Promise((resolve, reject) => {
         if (params instanceof Error) {
           reject(params);
           return null;
         }
-        const path = params == null ? url : url + '?' + params;
-        let arr = ['GET', path, true];
-        if (user != null) {
-          arr.push(user);
-          if (pass != null) {
-            arr.push(pass);
-          }
-        }
+        const path = params == null ? url : url + "?" + params;
         const xhr = new XMLHttpRequest();
-        xhr.open.apply(xhr, arr);
+        xhr.open('GET', path);
+        if (authStr) {
+          xhr.setRequestHeader('Authorization', authStr);
+        }
         xhr.onload = () => {
           if (xhr.status < 400 && xhr.status >= 200) {
-            if (typeof returnType === 'string' && returnType.toLowerCase() === 'json') {
+            if (typeof returnType === "string" && returnType.toLowerCase() === "json") {
               const data = checkJSON(xhr.responseText);
               if (data instanceof Error) {
                 reject(data);
@@ -108,29 +121,25 @@
       });
     },
     post: (url, data, returnType) => {
-      if (typeof url !== 'string' || !url.length) {
+      if (typeof url !== "string" || !url.length) {
         return promise.reject(noURLError);
       }
-      [params, user, pass] = stripUserAndPass(data);
+      let [params, authStr] = stripUserAndPass(data);
       return new Promise((resolve, reject) => {
-        const params = data == null ? '' : toURLString(data);
+        const params = data == null ? "" : toURLString(data);
         if (params instanceof Error) {
           reject(params);
           return null;
         }
-        let arr = ['POST', url, true];
-        if (user != null) {
-          arr.push(user);
-          if (pass != null) {
-            arr.push(pass);
-          }
-        }
         const xhr = new XMLHttpRequest();
-        xhr.open.apply(xhr, arr);
-        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded;charset=UTF-8');
+        xhr.open('POST', url);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+        if (authStr) {
+          xhr.setRequestHeader('Authorization', authStr);
+        }
         xhr.onload = () => {
           if (xhr.status < 400 && xhr.status >= 200) {
-            if (typeof returnType === 'string' && returnType.toLowerCase() === 'json') {
+            if (typeof returnType === "string" && returnType.toLowerCase() === "json") {
               const data = checkJSON(xhr.responseText);
               if (data instanceof Error) {
                 reject(data);
@@ -156,7 +165,7 @@
       });
     },
     getJSON: function(url, data) {
-      return this.get(url, data, 'json');
+      return this.get(url, data, "json");
     },
   };
 });

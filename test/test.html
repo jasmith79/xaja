@@ -8,13 +8,25 @@
 <body>
   I'm a page!
   <script>
+    'use strict';
+    const base64Encode = str => {
+      if (typeof str !== 'string') {
+        throw notStringError;
+      }
+      const bstring = encodeURIComponent(str)
+        .replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1));
+
+      return btoa(bstring);
+    };
+
     if (!window.xaja) {
       throw new Error('Stop the world, Im broken!');
     }
     var p1 = xaja.get('test/test.txt', {foo: 'bar'});
     var p2 = xaja.post('test/test.txt', {foo: 'bar'});
-    var p3 = xaja.getJSON('test/test.json');
-    Promise.all([p1, p2, p3])
+    var p3 = xaja.get('test/test.txt', {foo: 'bar', user_name: "ima", password: "user"});
+    var p4 = xaja.getJSON('test/test.json');
+    Promise.all([p1, p2, p3, p4])
       .then(function(arr) {
         var json = arr.pop();
         var passed = arr.every(function(str) {
@@ -29,6 +41,31 @@
       .catch(function(err) {
         document.write("Error! " + err.message);
       });
+    // var xhr = new XMLHttpRequest();
+    // xhr.onload = function () {
+    //   if (xhr.status < 400 && xhr.status >= 200) {
+    //     if (typeof returnType === 'string' && returnType.toLowerCase() === 'json') {
+    //       var _data = xhr.responseText;
+    //       if (_data instanceof Error) {
+    //         throw _data;
+    //       } else {
+    //         document.write(_data);
+    //       }
+    //       return null;
+    //     } else {
+    //       document.write(xhr.responseText);
+    //     }
+    //     return null;
+    //   } else {
+    //     throw new Error('Server responded with a status of ' + xhr.status);
+    //     return null;
+    //   }
+    // };
+    // var authStr = "Basic " + base64Encode("ima:user");
+    // console.log(authStr);
+    // xhr.open('GET', 'test/test.json', true);
+    // xhr.setRequestHeader('Authorization', authStr);
+    // xhr.send();
   </script>
 </body>
 </html>
