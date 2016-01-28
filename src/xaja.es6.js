@@ -7,7 +7,7 @@
   }
 })(window ? window : null, _global => {
   "use strict";
-  if (typeof XMLHttpRequest !== "function") {
+  if (typeof XMLHttpRequest == null) {
     const XMLHttpRequest = require("xmlhttprequest");
   }
 
