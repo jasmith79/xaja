@@ -1,0 +1,25 @@
+{
+  "name": "xaja",
+  "version": "1.0.0",
+  "description": "Simple ajax lib",
+  "main": "dist/xaja.min.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "jasmine"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jasmith79/xaja.git"
+  },
+  "keywords": [
+    "ajax"
+  ],
+  "author": "jasmith79@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jasmith79/xaja/issues"
+  },
+  "homepage": "https://github.com/jasmith79/xaja#readme"
+}
