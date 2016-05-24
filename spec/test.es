@@ -27,8 +27,7 @@ describe('get', () => {
       });
   });
 
-  it('should throw on missing or wrong args', () => {
-    expect(() => xaja.get()).toThrow();
+  it('should throw on wrong args', () => {
     expect(() => xaja.get('./spec/test.txt', 3)).toThrow();
   });
 });
@@ -36,9 +35,9 @@ describe('get', () => {
 describe('post', () => {
   it('should be able to post data', done => {
     xaja
-      .post('testrest', 'immastring')
+      .post('testrest', {string: 'immastring'})
       .then(x => {
-        expect(x).toBe('immastring');
+        expect(x).toBe('string=immastring');
         done();
       })
       .catch(e => {
@@ -48,7 +47,6 @@ describe('post', () => {
   });
 
   it('should throw on wrong or missing args', () => {
-    expect(() => xaja.post('testrest')).toThrow();
     expect(() => xaja.post('testrest', [])).toThrow();
   });
 });
@@ -70,7 +68,7 @@ describe('getJSON', () => {
     xaja.getJSON('./spec/test.txt')
       .then(() => { throw new Error('Should not see me') })
       .catch(e => {
-        expect(e.message).toBe('Expected JSONString, got string.');
+        expect(e.message).toBe('Expected JSONString, got string');
         done();
       });
   });

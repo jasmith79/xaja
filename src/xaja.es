@@ -45,10 +45,10 @@ const stripUserAndPass = typed.Dispatcher([
 typed.defType('__string+', s => s && typed.isType('string', s));
 typed.sumType('__string|object', 'string', 'object');
 
-const get = typed.guard(1, ['__string+', '__string|object', 'string'], (url, data, returnType) => {
-  let [params, authStr] = stripUserAndPass(data);
+const get = typed.guard(1, ['__string+', '__string|object'], (url, data) => {
+  let [params, authStr] = data ? stripUserAndPass(data) : [null, null];
   return new Promise((resolve, reject) => {
-    const path = url + "?" + params;
+    const path = url + (params ? `?${params}` : '');
     const xhr = new XMLHttpRequest();
     xhr.open('GET', path);
     if (authStr) {
@@ -56,17 +56,7 @@ const get = typed.guard(1, ['__string+', '__string|object', 'string'], (url, dat
     }
     xhr.onload = () => {
       if (xhr.status < 400 && xhr.status >= 200) {
-        if (returnType && returnType.toLowerCase() === "json") {
-          const data = checkJSON(xhr.responseText);
-          if (data instanceof Error) {
-            reject(data);
-          } else {
-            resolve(data);
-          }
-          return null;
-        } else {
-          resolve(xhr.responseText);
-        }
+        resolve(xhr.responseText);
         return null;
       } else {
         reject(new Error(`Server responded with a status of ${xhr.status}`));
@@ -82,10 +72,10 @@ const get = typed.guard(1, ['__string+', '__string|object', 'string'], (url, dat
   });
 });
 
-const post = typed.guard(2, ['__string+', '__string|object', 'string'], (url, data, returnType) => {
+const post = typed.guard(['__string+', 'object'], (url, data) => {
   let [params, authStr] = stripUserAndPass(data);
   return new Promise((resolve, reject) => {
-    const params = data == null ? "" : toURLString(data);
+    const params = toURLString(data);
     const xhr = new XMLHttpRequest();
     xhr.open('POST', url);
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
@@ -94,17 +84,7 @@ const post = typed.guard(2, ['__string+', '__string|object', 'string'], (url, da
     }
     xhr.onload = () => {
       if (xhr.status < 400 && xhr.status >= 200) {
-        if (returnType && returnType.toLowerCase() === "json") {
-          const data = checkJSON(xhr.responseText);
-          if (data instanceof Error) {
-            reject(data);
-          } else {
-            resolve(data);
-          }
-          return null;
-        } else {
-          resolve(xhr.responseText);
-        }
+        resolve(xhr.responseText);
         return null;
       } else {
         reject(new Error(`Server responded with a status of ${xhr.status}`));
@@ -120,7 +100,7 @@ const post = typed.guard(2, ['__string+', '__string|object', 'string'], (url, da
   });
 });
 
-const getJSON = (url, data) => utils.unpackJSON(get(url, data, 'json'));
+const getJSON = (url, data) => utils.unpackJSON(data ? get(url, data) : get(url));
 
 export {
   get,

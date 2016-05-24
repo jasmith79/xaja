@@ -53,10 +53,7 @@
       });
     });
 
-    it('should throw on missing or wrong args', function () {
-      expect(function () {
-        return xaja.get();
-      }).toThrow();
+    it('should throw on wrong args', function () {
       expect(function () {
         return xaja.get('./spec/test.txt', 3);
       }).toThrow();
@@ -65,8 +62,8 @@
 
   describe('post', function () {
     it('should be able to post data', function (done) {
-      xaja.post('testrest', 'immastring').then(function (x) {
-        expect(x).toBe('immastring');
+      xaja.post('testrest', { string: 'immastring' }).then(function (x) {
+        expect(x).toBe('string=immastring');
         done();
       }).catch(function (e) {
         expect(e.message).toBe('ignore');
@@ -75,9 +72,6 @@
     });
 
     it('should throw on wrong or missing args', function () {
-      expect(function () {
-        return xaja.post('testrest');
-      }).toThrow();
       expect(function () {
         return xaja.post('testrest', []);
       }).toThrow();
@@ -99,7 +93,7 @@
       xaja.getJSON('./spec/test.txt').then(function () {
         throw new Error('Should not see me');
       }).catch(function (e) {
-        expect(e.message).toBe('Expected JSONString, got string.');
+        expect(e.message).toBe('Expected JSONString, got string');
         done();
       });
     });

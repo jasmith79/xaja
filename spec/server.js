@@ -8,10 +8,11 @@ var dir  = '.';
 var read = d.denodeify(fs.readFile);
 var server = http.createServer(function(req, res) {
   //this is terrible, but simple enough for testing
-  var reqPath = dir + req.url;
+  var reqPath = dir + req.url, isFile = true;
   var path;
   if (req.method.toLowerCase() === 'post') {
     var body = '';
+    isFile = false;
     req.on('data', function(chunk) {
       body += chunk.toString();
     });
@@ -20,9 +21,15 @@ var server = http.createServer(function(req, res) {
       res.end(body);
     });
   } else {
-    var arr = reqPath.split('?');
-    var temppath = arr[0];
-    var query = arr[1];
+    var arr, temppath, query = '';
+    if (reqPath.indexOf('?') === -1) {
+      var temppath = reqPath;
+    } else {
+      arr = reqPath.split('?');
+      temppath = arr[0];
+      query = arr[1];
+    }
+    // console.log(`reqPath: ${reqPath} / path ${temppath}`);
     switch (temppath) {
       case './':
       case '/':
@@ -33,6 +40,7 @@ var server = http.createServer(function(req, res) {
         path = './spec/alt.html';
         break;
       case './testrest':
+        isFile = false;
         var obj = qs.parse(query);
         res.end(Object.keys(obj).reduce((str, k) => str += `${k}:${obj[k]}`, ''));
         break;
@@ -41,7 +49,7 @@ var server = http.createServer(function(req, res) {
     }
   }
 
-  if (path) {
+  if (isFile) {
     var p = read(path, 'utf-8');
     p.then(function(fstr) {
       res.end(fstr);
@@ -50,10 +58,6 @@ var server = http.createServer(function(req, res) {
       res.statusCode = 404;
       res.end('File not found');
     });
-  } else {
-    console.log('Couldnt find ' + reqPath);
-    res.statusCode = 404;
-    res.end('File not found');
   }
 });
 server.listen(8080, function() {

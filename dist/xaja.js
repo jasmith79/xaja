@@ -129,16 +129,16 @@
   });
   typed.sumType('__string|object', 'string', 'object');
 
-  var get = typed.guard(1, ['__string+', '__string|object', 'string'], function (url, data, returnType) {
-    var _stripUserAndPass = stripUserAndPass(data);
+  var get = typed.guard(1, ['__string+', '__string|object'], function (url, data) {
+    var _ref = data ? stripUserAndPass(data) : [null, null];
 
-    var _stripUserAndPass2 = _slicedToArray(_stripUserAndPass, 2);
+    var _ref2 = _slicedToArray(_ref, 2);
 
-    var params = _stripUserAndPass2[0];
-    var authStr = _stripUserAndPass2[1];
+    var params = _ref2[0];
+    var authStr = _ref2[1];
 
     return new Promise(function (resolve, reject) {
-      var path = url + "?" + params;
+      var path = url + (params ? '?' + params : '');
       var xhr = new XMLHttpRequest();
       xhr.open('GET', path);
       if (authStr) {
@@ -146,17 +146,7 @@
       }
       xhr.onload = function () {
         if (xhr.status < 400 && xhr.status >= 200) {
-          if (returnType && returnType.toLowerCase() === "json") {
-            var _data = checkJSON(xhr.responseText);
-            if (_data instanceof Error) {
-              reject(_data);
-            } else {
-              resolve(_data);
-            }
-            return null;
-          } else {
-            resolve(xhr.responseText);
-          }
+          resolve(xhr.responseText);
           return null;
         } else {
           reject(new Error('Server responded with a status of ' + xhr.status));
@@ -172,16 +162,16 @@
     });
   });
 
-  var post = typed.guard(2, ['__string+', '__string|object', 'string'], function (url, data, returnType) {
-    var _stripUserAndPass3 = stripUserAndPass(data);
+  var post = typed.guard(['__string+', 'object'], function (url, data) {
+    var _stripUserAndPass = stripUserAndPass(data);
 
-    var _stripUserAndPass4 = _slicedToArray(_stripUserAndPass3, 2);
+    var _stripUserAndPass2 = _slicedToArray(_stripUserAndPass, 2);
 
-    var params = _stripUserAndPass4[0];
-    var authStr = _stripUserAndPass4[1];
+    var params = _stripUserAndPass2[0];
+    var authStr = _stripUserAndPass2[1];
 
     return new Promise(function (resolve, reject) {
-      var params = data == null ? "" : toURLString(data);
+      var params = toURLString(data);
       var xhr = new XMLHttpRequest();
       xhr.open('POST', url);
       xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
@@ -190,17 +180,7 @@
       }
       xhr.onload = function () {
         if (xhr.status < 400 && xhr.status >= 200) {
-          if (returnType && returnType.toLowerCase() === "json") {
-            var _data2 = checkJSON(xhr.responseText);
-            if (_data2 instanceof Error) {
-              reject(_data2);
-            } else {
-              resolve(_data2);
-            }
-            return null;
-          } else {
-            resolve(xhr.responseText);
-          }
+          resolve(xhr.responseText);
           return null;
         } else {
           reject(new Error('Server responded with a status of ' + xhr.status));
@@ -217,7 +197,7 @@
   });
 
   var getJSON = function getJSON(url, data) {
-    return utils.unpackJSON(get(url, data, 'json'));
+    return utils.unpackJSON(data ? get(url, data) : get(url));
   };
 
   exports.get = get;
