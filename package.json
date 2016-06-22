@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/jasmith79/xaja#readme",
   "dependencies": {
-    "base-html": "^0.1.1",
+    "base-html": "^1.0.2",
     "decorators-js": "^3.0.6"
   },
   "devDependencies": {
