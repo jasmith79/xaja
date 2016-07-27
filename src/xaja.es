@@ -13,7 +13,7 @@ const base64Encode = typed.guard('string', str => {
 
 //toURLString :: a -> String
 const toURLString = typed.Dispatcher([
-  [['string'], str => str],
+  [['string'], str => encodeURIComponent(str)],
   [['nil'], () => ''],
   [['object'], a => Object.keys(a)
     .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(a[k])}`)
@@ -106,4 +106,5 @@ export {
   get,
   post,
   getJSON,
+  toURLString,
 }
