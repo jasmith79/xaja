@@ -16,7 +16,7 @@
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.getJSON = exports.post = exports.get = undefined;
+  exports.toURLString = exports.getJSON = exports.post = exports.get = undefined;
 
   var typed = _interopRequireWildcard(_jsTyped);
 
@@ -91,7 +91,7 @@
 
   //toURLString :: a -> String
   var toURLString = typed.Dispatcher([[['string'], function (str) {
-    return str;
+    return encodeURIComponent(str);
   }], [['nil'], function () {
     return '';
   }], [['object'], function (a) {
@@ -203,4 +203,5 @@
   exports.get = get;
   exports.post = post;
   exports.getJSON = getJSON;
+  exports.toURLString = toURLString;
 });
