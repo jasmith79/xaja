@@ -79,6 +79,8 @@
     };
   }();
 
+  var networkError = new Error('Sorry but we could not reach the server.');
+
   //from https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
   //note that btoa is IE 10+
   var base64Encode = typed.guard('string', function (str) {

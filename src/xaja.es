@@ -2,6 +2,8 @@ import * as typed from 'js-typed';
 import * as decor from 'decorators-js';
 import * as utils from 'utils';
 
+const networkError = new Error('Sorry but we could not reach the server.');
+
 //from https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
 //note that btoa is IE 10+
 const base64Encode = typed.guard('string', str => {
