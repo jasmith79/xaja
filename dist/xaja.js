@@ -159,7 +159,11 @@
         reject(networkError);
         return null;
       };
-      xhr.send();
+      try {
+        xhr.send();
+      } catch (e) {
+        reject(e);
+      }
       return null;
     });
   });
@@ -193,7 +197,11 @@
         reject(networkError);
         return null;
       };
-      xhr.send(params);
+      try {
+        xhr.send(params);
+      } catch (e) {
+        reject(e);
+      }
       return null;
     });
   });

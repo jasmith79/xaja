@@ -69,7 +69,11 @@ const get = typed.guard(1, ['__string+', '__string|object'], (url, data) => {
       reject(networkError);
       return null;
     }
-    xhr.send();
+    try {
+      xhr.send();
+    } catch (e) {
+      reject(e);
+    }
     return null;
   });
 });
@@ -97,7 +101,11 @@ const post = typed.guard(['__string+', 'object'], (url, data) => {
       reject(networkError);
       return null;
     }
-    xhr.send(params);
+    try {
+      xhr.send(params);
+    } catch (e) {
+      reject(e);
+    }
     return null;
   });
 });
