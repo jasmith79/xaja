@@ -37,6 +37,9 @@ const stream = xaja.request({
 });
 ```
 
+## HTTP Error Codes
+Unlike raw fetch, xaja will reject the returned Promise if the HTTP status code indicates an error. Any code not in the 200-399 range will cause a rejection.
+
 ## Shorthand
 
 In addition to the `request` function, xaja also offers `get`, `post`, and `getJSON` shorthand functions that invoke `request` with the appropriate configuration. They have the following signature:
