@@ -41,37 +41,37 @@ const stream = xaja.request({
 
 In addition to the `request` function, xaja also offers `get`, `post`, and `getJSON` shorthand functions that invoke `request` with the appropriate configuration. They have the following signature:
 
-#### `(url:String, data:FormData|String|Object<optional>, options:Object<optional>) => Promise(Any)`
+##### `(url:String, data:FormData|String|Object<optional>, options:Object<optional>) => Promise(Any)`
 
 ## Options Object
 
 The options object supports the following parameters. Only the url parameter is required:
 
-### `url:String`
+#### `url:String`
 The url to be requested.
 
-### `data:FormData|String|Object`
+#### `data:FormData|String|Object`
 Data to be passed along with the request. For `POST` requests it's passed as the body to the fetch call, for `GET` requests it is converted to a query string and appended to the url. Usernames and passwords are automatically stripped out and converted to an Authorization header.
 
-### `method:String`
+#### `method:String`
 HTTP method. Defaults to `GET`.
 
-### `responseType:String`
+#### `responseType:String`
 Expected response, when set to `text` or `html` automatically pulls the response text. For `json` it pulls the responsejson, etc. If set to `stream` or some unknown value you will get back the raw Response object. Defaults to `text`.
 
-### `contentType:String`
+#### `contentType:String`
 Mime type of the supplied data, e.g. `application/x-www-form-urlencoded`. Browsers are now pretty good at guessing this without any programmer input.
 
-### `timeout:Number`
+#### `timeout:Number`
 Amount of time in milliseconds before the returned Promise rejects. Defaults to none.
 
-### `cache:Boolean`
+#### `cache:Boolean`
 If true the response's text/json/etc. will be cached in localStorage by the url, on subsequent requests if there is a timeout or error the Promise will resolve to the cached value rather than rejecting. Defaults to false.
 
-### `headers:Headers|Object`
+#### `headers:Headers|Object`
 The headers for the request.
 
-### `credentials:String`
+#### `credentials:String`
 The security setting for requests: e.g. `same-origin`.
 
 ## Accessing the Request object
