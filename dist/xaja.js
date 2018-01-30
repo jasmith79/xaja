@@ -1,44 +1,29 @@
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', 'js-typed', 'decorators-js', 'utils'], factory);
+    define(['exports', '../node_modules/extracttype/extracttype.js'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('js-typed'), require('decorators-js'), require('utils'));
+    factory(exports, require('../node_modules/extracttype/extracttype.js'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.jsTyped, global.decoratorsJs, global.utils);
+    factory(mod.exports, global.extracttype);
     global.xaja = mod.exports;
   }
-})(this, function (exports, _jsTyped, _decoratorsJs, _utils) {
+})(this, function (exports, _extracttype) {
   'use strict';
 
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-  exports.toURLString = exports.getJSON = exports.post = exports.get = undefined;
+  exports.post = exports.getJSON = exports.get = exports.request = exports.fetchLoaded = exports.toURLString = undefined;
 
-  var typed = _interopRequireWildcard(_jsTyped);
+  var _extracttype2 = _interopRequireDefault(_extracttype);
 
-  var decor = _interopRequireWildcard(_decoratorsJs);
-
-  var utils = _interopRequireWildcard(_utils);
-
-  function _interopRequireWildcard(obj) {
-    if (obj && obj.__esModule) {
-      return obj;
-    } else {
-      var newObj = {};
-
-      if (obj != null) {
-        for (var key in obj) {
-          if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
-        }
-      }
-
-      newObj.default = obj;
-      return newObj;
-    }
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
   }
 
   var _slicedToArray = function () {
@@ -79,139 +64,343 @@
     };
   }();
 
-  var networkError = new Error('Sorry but we could not reach the server.');
+  var global = new Function('return this;')();
+  var Promise = global.Promise,
+      encodeURIComponent = global.encodeURIComponent,
+      btoa = global.btoa,
+      fetch = global.fetch,
+      localStorage = global.localStorage,
+      Error = global.Error,
+      Object = global.Object,
+      Request = global.Request;
 
-  //from https://developer.mozilla.org/en-US/docs/Web/API/WindowBase64/Base64_encoding_and_decoding
-  //note that btoa is IE 10+
-  var base64Encode = typed.guard('string', function (str) {
+
+  var base64Encode = function base64Encode(str) {
     var bstring = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
       return String.fromCharCode("0x" + p1);
     });
 
     return btoa(bstring);
-  });
-
-  //toURLString :: a -> String
-  var toURLString = typed.Dispatcher([[['string'], function (str) {
-    return encodeURIComponent(str);
-  }], [['nil'], function () {
-    return '';
-  }], [['object'], function (a) {
-    return Object.keys(a).map(function (k) {
-      return encodeURIComponent(k) + '=' + encodeURIComponent(a[k]);
-    }).join("&");
-  }]]);
-
-  var stripUserAndPass = typed.Dispatcher([[['nil'], function () {
-    return [];
-  }], [['object'], function (obj) {
-    var keys = Object.keys(obj);
-    var retObj = {},
-        user = "",
-        pass = "",
-        authStr = "";
-    keys.forEach(function (k) {
-      var val = obj[k];
-      if (k.match(/user/i)) {
-        user = val;
-      } else if (k.match(/pass/i)) {
-        pass = val;
-      } else {
-        retObj[k] = val;
-      }
-    });
-    if (user) {
-      authStr = "Basic " + base64Encode(user + ":" + pass);
-    }
-    return [toURLString(retObj), authStr];
-  }]]);
-
-  typed.defType('__string+', function (s) {
-    return s && typed.isType('string', s);
-  });
-  typed.sumType('__string|object', 'string', 'object');
-
-  var get = typed.guard(1, ['__string+', '__string|object'], function (url, data) {
-    var _ref = data ? stripUserAndPass(data) : [null, null];
-
-    var _ref2 = _slicedToArray(_ref, 2);
-
-    var params = _ref2[0];
-    var authStr = _ref2[1];
-
-    return new Promise(function (resolve, reject) {
-      var path = url + (params ? '?' + params : '');
-      var xhr = new XMLHttpRequest();
-      xhr.open('GET', path);
-      if (authStr) {
-        xhr.setRequestHeader('Authorization', authStr);
-      }
-      xhr.onload = function () {
-        if (xhr.status < 400 && xhr.status >= 200) {
-          resolve(xhr.responseText);
-          return null;
-        } else {
-          reject(new Error('Server responded with a status of ' + xhr.status));
-          return null;
-        }
-      };
-      xhr.onerror = function () {
-        reject(networkError);
-        return null;
-      };
-      try {
-        xhr.send();
-      } catch (e) {
-        reject(e);
-      }
-      return null;
-    });
-  });
-
-  var post = typed.guard(['__string+', 'object'], function (url, data) {
-    var _stripUserAndPass = stripUserAndPass(data);
-
-    var _stripUserAndPass2 = _slicedToArray(_stripUserAndPass, 2);
-
-    var params = _stripUserAndPass2[0];
-    var authStr = _stripUserAndPass2[1];
-
-    return new Promise(function (resolve, reject) {
-      var params = toURLString(data);
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', url);
-      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
-      if (authStr) {
-        xhr.setRequestHeader('Authorization', authStr);
-      }
-      xhr.onload = function () {
-        if (xhr.status < 400 && xhr.status >= 200) {
-          resolve(xhr.responseText);
-          return null;
-        } else {
-          reject(new Error('Server responded with a status of ' + xhr.status));
-          return null;
-        }
-      };
-      xhr.onerror = function () {
-        reject(networkError);
-        return null;
-      };
-      try {
-        xhr.send(params);
-      } catch (e) {
-        reject(e);
-      }
-      return null;
-    });
-  });
-
-  var getJSON = function getJSON(url, data) {
-    return utils.unpackJSON(data ? get(url, data) : get(url));
   };
 
-  exports.get = get;
-  exports.post = post;
-  exports.getJSON = getJSON;
-  exports.toURLString = toURLString;
+  var extractUserAndPass = function extractUserAndPass(obj) {
+    if (obj) {
+      var _Object$entries$reduc = Object.entries(obj).reduce(function (_ref, _ref2) {
+        var _ref4 = _slicedToArray(_ref, 2),
+            usrpss = _ref4[0],
+            o = _ref4[1];
+
+        var _ref3 = _slicedToArray(_ref2, 2),
+            k = _ref3[0],
+            v = _ref3[1];
+
+        if (k.match(/user/i)) {
+          usrpss.user = v;
+        } else if (k.match(/pass/i)) {
+          usrpss.pass = v;
+        } else {
+          o[k] = v;
+        }
+
+        return [usrpss, o];
+      }, [{}, {}]),
+          _Object$entries$reduc2 = _slicedToArray(_Object$entries$reduc, 2),
+          _Object$entries$reduc3 = _Object$entries$reduc2[0],
+          user = _Object$entries$reduc3.user,
+          pass = _Object$entries$reduc3.pass,
+          rest = _Object$entries$reduc2[1];
+
+      if (user && pass) {
+        return ['Basic ' + base64Encode(user + ':' + pass), rest];
+      }
+
+      return [{}, rest];
+    }
+
+    return null;
+  };
+
+  var toURLString = exports.toURLString = function toURLString(arg) {
+    switch ((0, _extracttype2.default)(arg)) {
+      case 'Null':
+      case 'Undefined':
+        return '';
+
+      case 'String':
+        return encodeURIComponent(arg);
+
+      default:
+        return Object.entries(arg).map(function (_ref5) {
+          var _ref6 = _slicedToArray(_ref5, 2),
+              k = _ref6[0],
+              v = _ref6[1];
+
+          return encodeURIComponent(k) + '=' + encodeURIComponent(v);
+        }).join('&');
+    }
+  };
+
+  var fetchLoaded = exports.fetchLoaded = new Promise(function (resolve, reject) {
+    if (!fetch) {
+      var script = document.createElement('script');
+      script.src = './node_modules/whatwg-fetch/fetch.js';
+      script.onload = function (_) {
+        resolve([global.fetch, global.Request]);
+      };
+
+      script.onerror = function (err) {
+        reject(err);
+      };
+
+      global.document.head.appendChild(script);
+    } else {
+      resolve([global.fetch, global.Request]);
+    }
+  });
+
+  var request = exports.request = function request(arg) {
+    var url = arg.url,
+        data = arg.data,
+        _arg$method = arg.method,
+        method = _arg$method === undefined ? 'GET' : _arg$method,
+        responseType = arg.responseType,
+        contentType = arg.contentType,
+        _arg$timeout = arg.timeout,
+        timeout = _arg$timeout === undefined ? 0 : _arg$timeout,
+        cache = arg.cache,
+        headers = arg.headers,
+        _arg$credentials = arg.credentials,
+        credentials = _arg$credentials === undefined ? 'same-origin' : _arg$credentials;
+
+
+    if (!url) {
+      if ((0, _extracttype2.default)(arg) === 'String') {
+        url = arg;
+      } else {
+        return Promise.reject(new TypeError('HTTP request must include a url.'));
+      }
+    }
+
+    if (!responseType) {
+      var match = url.match(/\.(html|json|text|txt)$/);
+      if (match) {
+        responseType = match[1] === 'txt' ? 'text' : match[1];
+      } else {
+        responseType = 'text';
+      }
+    }
+
+    var auth = void 0,
+        body = void 0;
+    if (data) {
+      switch ((0, _extracttype2.default)(data)) {
+        case 'String':
+          contentType = contentType || 'text/plain;charset=UTF-8';
+          body = data;
+          break;
+
+        case 'FormData':
+          body = data;
+          break;
+
+        case 'Object':
+          var _extractUserAndPass = extractUserAndPass(data),
+              _extractUserAndPass2 = _slicedToArray(_extractUserAndPass, 2),
+              a = _extractUserAndPass2[0],
+              b = _extractUserAndPass2[1];
+
+          auth = a;
+          if (method.toUpperCase() === 'GET') {
+            url = url + '?' + toURLString(b);
+            contentType = contentType || 'application/x-www-form-urlencoded;charset=UTF-8';
+          } else {
+            body = new FormData();
+            Object.entries(b).forEach(function (_ref7) {
+              var _ref8 = _slicedToArray(_ref7, 2),
+                  k = _ref8[0],
+                  v = _ref8[1];
+
+              body.append(k, v);
+            });
+          }
+
+          break;
+
+        default:
+          body = data;
+          break;
+      }
+    }
+
+    var hdrs = headers || new Headers();
+
+    if (auth && !hdrs.get('Authorization')) hdrs.set('Authorization', auth);
+    if (contentType && !hdrs.get('Content-Type')) hdrs.set('Content-Type', contentType);
+
+    var opts = {
+      method: method,
+      headers: hdrs,
+      credentials: credentials
+    };
+
+    if (method.toUpperCase() !== 'GET') opts.body = body;
+    if (method.toUpperCase() === 'POST' && !opts.body) opts.body = {};
+
+    var req = new Request(url, opts);
+    var p = fetchLoaded.then(function (_ref9) {
+      var _ref10 = _slicedToArray(_ref9, 2),
+          fetch = _ref10[0],
+          Request = _ref10[1];
+
+      return new Promise(function (resolve, reject) {
+        var innerp = fetch(req).then(function (resp) {
+          if (resp.status >= 200 && resp.status < 300) {
+            return resp;
+          } else {
+            var err = new Error(resp.statusText);
+            err.response = resp;
+            var cached = localStorage.getItem(url);
+            if (cached) {
+              console.warn(err.message + ' resolving with cached data...');
+              var resCached = function resCached() {
+                return Promise.resolve(cached);
+              };
+              return {
+                json: resCached,
+                text: resCached,
+                blob: resCached,
+                arrayBuffer: resCached
+              };
+            } else {
+              throw err;
+            }
+          }
+        });
+
+        if (timeout) {
+          var handle = setTimeout(function () {
+            var msg = 'Request for ' + url + ' reached timeout of ' + timeout + 'ms.';
+            var cached = localStorage.getItem(url);
+            if (cached) {
+              console.warn(msg + ' resolving with cached data...');
+              var resCached = function resCached() {
+                return Promise.resolve(cached);
+              };
+              resolve({
+                json: resCached,
+                text: resCached,
+                blob: resCached,
+                arrayBuffer: resCached
+              });
+            } else {
+              reject(new Error(msg));
+            }
+          }, timeout);
+
+          innerp.then(function (resp) {
+            global.clearTimeout(handle);
+            resolve(resp);
+          });
+        } else {
+          resolve(innerp);
+        }
+      });
+    });
+    p.request = req;
+
+    var rt = responseType.toLowerCase();
+    var promise = void 0;
+    switch (rt) {
+      case 'text':
+      case 'html':
+        promise = p.then(function (resp) {
+          return resp.text();
+        }).then(function (txt) {
+          if (cache && method.toUpperCase() === 'GET') localStorage.setItem(url, txt);
+          return txt;
+        });
+
+        Object.defineProperty(promise, 'request', { get: function get() {
+            return p.request;
+          } });
+        return promise;
+
+      case 'json':
+        promise = p.then(function (resp) {
+          return resp.json();
+        }).then(function (json) {
+          if (cache && method.toUpperCase() === 'GET') localStorage.setItem(url, json);
+          return json;
+        });
+
+        Object.defineProperty(promise, 'request', { get: function get() {
+            return p.request;
+          } });
+        return promise;
+
+      case 'blob':
+      case 'arrayBuffer':
+        Object.defineProperty(promise, 'request', { get: function get() {
+            return p.request;
+          } });
+        return p.then(function (resp) {
+          return resp[rt]();
+        });
+
+      case 'stream':
+      default:
+        return p;
+    }
+  };
+
+  var get = exports.get = function get(url, data) {
+    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+    var conf = Object.entries(opts).reduce(function (acc, _ref11) {
+      var _ref12 = _slicedToArray(_ref11, 2),
+          k = _ref12[0],
+          v = _ref12[1];
+
+      return acc[k] = v, acc;
+    }, {});
+    conf.method = 'GET';
+    conf.url = url;
+    if (data) conf.data = data;
+    return request(conf);
+  };
+
+  var getJSON = exports.getJSON = function getJSON(url, data) {
+    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+    var conf = Object.entries(opts).reduce(function (acc, _ref13) {
+      var _ref14 = _slicedToArray(_ref13, 2),
+          k = _ref14[0],
+          v = _ref14[1];
+
+      return acc[k] = v, acc;
+    }, {});
+    conf.method = 'GET';
+    conf.url = url;
+    conf.responseType = 'json';
+    if (data) conf.data = data;
+    return request(conf);
+  };
+
+  var post = exports.post = function post(url, data) {
+    var opts = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+
+    var conf = Object.entries(opts).reduce(function (acc, _ref15) {
+      var _ref16 = _slicedToArray(_ref15, 2),
+          k = _ref16[0],
+          v = _ref16[1];
+
+      return acc[k] = v, acc;
+    }, {});
+    conf.method = 'POST';
+    conf.url = url;
+    if (data) conf.data = data;
+    return request(conf);
+  };
+
+  exports.default = request;
 });

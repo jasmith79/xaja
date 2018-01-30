@@ -14,7 +14,8 @@
     "url": "git+https://github.com/jasmith79/xaja.git"
   },
   "keywords": [
-    "ajax"
+    "ajax",
+    "fetch"
   ],
   "author": "jasmith79@gmail.com",
   "license": "MIT",
@@ -23,16 +24,17 @@
   },
   "homepage": "https://github.com/jasmith79/xaja#readme",
   "dependencies": {
-    "base-html": "^1.3.3",
-    "decorators-js": "^3.1.1",
-    "js-typed": "^1.0.2"
+    "extracttype": "^1.0.1",
+    "whatwg-fetch": "^2.0.3"
   },
   "devDependencies": {
-    "babel-cli": "^6.9.0",
-    "babel-plugin-transform-es2015-modules-umd": "^6.8.0",
-    "babel-preset-es2015": "^6.9.0",
-    "es6-promise": "^3.2.1",
-    "jasmine": "^2.4.1",
-    "uglifyjs": "^2.4.10"
+    "babel-cli": "^6.26.0",
+    "babel-minify": "^0.2.0",
+    "babel-plugin-transform-es2015-modules-umd": "^6.24.1",
+    "babel-preset-env": "^1.6.1",
+    "commander": "^2.13.0",
+    "hapi": "^16.6.2",
+    "inert": "^4.2.1",
+    "jasmine": "^2.9.0"
   }
 }

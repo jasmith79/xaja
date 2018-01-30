@@ -1,10 +1,8 @@
 SHELL := /bin/bash
 PATH  := node_modules/.bin:$(PATH)
-SRC   := src/xaja.es
+SRC   := src/xaja.mjs
 JS    := dist/xaja.js
 MIN   := dist/xaja.min.js
-SPEC  := spec/test.es
-TESTS := dist/test.spec.js
 
 $(JS): $(SRC)
 	@mkdir -p $(@D)
@@ -12,11 +10,7 @@ $(JS): $(SRC)
 
 $(MIN): $(JS)
 	@mkdir -p $(@D)
-	uglifyjs -cmo $@ $<
-
-$(TESTS): $(SPEC)
-	@mkdir -p $(@D)
-	babel $< -o $@
+	minify $< > $@
 
 install:
 	npm install
@@ -30,7 +24,7 @@ uninstall:
 clean:
 	rm -rf dist
 
-build: $(MIN) $(TESTS)
+all: $(MIN)
 
 serve:
 	node spec/server.js
