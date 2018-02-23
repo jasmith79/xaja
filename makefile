@@ -1,16 +1,26 @@
 SHELL := /bin/bash
 PATH  := node_modules/.bin:$(PATH)
-SRC   := src/xaja.mjs
+SRC   := src/xaja.js
 JS    := dist/xaja.js
+ES5   := dist/xaja.es5.js
 MIN   := dist/xaja.min.js
+MIN5  := dist/xaja.es5.min.js
 
 $(JS): $(SRC)
 	@mkdir -p $(@D)
-	babel $< -o $@
+	cat $< | sed "s#\.\./node_modules#../../../node_modules#" > $@
 
 $(MIN): $(JS)
 	@mkdir -p $(@D)
-	minify $< > $@
+	cat $< | minify > $@
+
+$(ES5): $(JS)
+	@mkdir -p $(@D)
+	babel $< -o $@
+
+$(MIN5): $(ES5)
+	@mkdir -p $(@D)
+	cat $< | minify > $@
 
 install:
 	npm install
@@ -24,7 +34,7 @@ uninstall:
 clean:
 	rm -rf dist
 
-all: $(MIN)
+all: $(MIN) $(MIN5)
 
 serve:
 	node spec/server.js
